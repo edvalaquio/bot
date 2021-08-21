@@ -14,6 +14,7 @@ from telegram.ext import (
 )
 
 import config
+import constants
 
 
 # Initializing logger
@@ -24,11 +25,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# build the main funtion
+chatbot_client = telegram.Bot(token=config.BOT_KEY)
+
 
 def get_service_account_credentials():
     return ServiceAccountCredentials.from_json_keyfile_name(
         filename=config.GSPREAD_CREDENTIALS_LOCATION,
-        scopes=GSPREAD_SERVICE_ACCOUNT_SCOPES,
+        scopes=constants.GSPREAD_SERVICE_ACCOUNT_SCOPES,
     )
 
 
