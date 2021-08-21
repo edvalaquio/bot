@@ -1,4 +1,5 @@
 # import libraries
+import logging
 from datetime import *
 
 import gspread
@@ -15,13 +16,13 @@ from telegram.ext import (
 import config
 
 
-# gspread configurations
-GSPREAD_SERVICE_ACCOUNT_SCOPES = [
-    "https://spreadsheets.google.com/feeds",
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive.file",
-    "https://www.googleapis.com/auth/drive",
-]
+# Initializing logger
+logging.basicConfig(
+    format="%(asctime)s %(levelname)-5.5s [%(name)s:%(lineno)s][%(threadName)s] %(message)s",
+    level=logging.INFO,
+)
+logger = logging.getLogger(__name__)
+
 
 
 def get_service_account_credentials():
