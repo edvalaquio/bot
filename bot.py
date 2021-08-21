@@ -1,18 +1,16 @@
 # import libraries
-
-import csv
-import json
-import os
-import sys
 from datetime import *
 
 import gspread
-import gspread_dataframe
-import pandas as pd
-import requests
 import telegram
 from oauth2client.service_account import ServiceAccountCredentials
-from telegram.ext import *
+from telegram.ext import (
+    CallbackQueryHandler,
+    CommandHandler,
+    Filters,
+    MessageHandler,
+    Updater,
+)
 
 # Set your parh
 path = "./Documents/4D&K"
@@ -20,8 +18,8 @@ path = "./Documents/4D&K"
 # BOT API
 BOT_KEY = "1823840395:AAEP5ciz50f3mpN8HZniufVpyi6IZwy1L3M"
 
-# Set scope when autheticating
-scope = [
+# Set scopes when autheticating
+scopes = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.file",
@@ -30,7 +28,8 @@ scope = [
 
 # Authenticate using your credentials
 creds = ServiceAccountCredentials.from_json_keyfile_name(
-    "Python Sheets API Key.json", scope
+    filename="./gspread-credentials.json",
+    scopes=scopes,
 )
 
 # Initialize the client
