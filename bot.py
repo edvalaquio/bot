@@ -38,22 +38,29 @@ def get_service_account_credentials():
 
 # start command
 def start_command(update, context):
-    update.message.reply_text("""Is this /expenses or a /sales?""")
+    logger.info("Received /start command from user - ")
+    update.message.reply_text("Is this /expenses or a /sales?")
 
 
 # user chooses /expenses or /sales
 def input_expense(update, context):
-    entry = update.message.text.split(",")
     try:
-        entry[1] = float(entry[1])
-    except:
+        # Unpack message sent by user after `split`
+        # `ValueError` will be raised if the length of the split message
+        # is less than two
+        description, amount = update.message.text.split(",")
+        # Verifies whether if amount provided by user is a number
+        assert int(amount) or float(amount)
+    except (AssertionError, ValueError):
         # If this fails, the input text was not separated by a comma
-        update.message.reply_text(
-            """Input the description, amount. Don't forget the comma.
-
-Sales categories are Dressed Chicken and Live Weight. Please note that by-product is under the Dressed Chicken category.
-"""
+        message = (
+            "Input the description, amount. Don't forget the comma.\n\n"
+            "Sales categories are Dressed Chicken and Live Weight. "
+            "Please note that by-product is under the Dressed Chicken category."
         )
+        update.message.reply_text(message)
+        return
+
     # Now we will build the buttons that will be displayed to the user. For this example, I chose 9 pre-set Types:
     buttons = [[]]
     buttons.append([])
@@ -67,9 +74,9 @@ Sales categories are Dressed Chicken and Live Weight. Please note that by-produc
             + "="
             + "Transportation"
             + "="
-            + str(entry[0])
+            + str(description)
             + "="
-            + str(entry[1]),
+            + str(amount),
         )
     )
     buttons[0].append(
@@ -81,9 +88,9 @@ Sales categories are Dressed Chicken and Live Weight. Please note that by-produc
             + "="
             + "Dressing Fee"
             + "="
-            + str(entry[0])
+            + str(description)
             + "="
-            + str(entry[1]),
+            + str(amount),
         )
     )
     buttons[0].append(
@@ -95,9 +102,9 @@ Sales categories are Dressed Chicken and Live Weight. Please note that by-produc
             + "="
             + "Plastic"
             + "="
-            + str(entry[0])
+            + str(description)
             + "="
-            + str(entry[1]),
+            + str(amount),
         )
     )
     buttons[1].append(
@@ -109,9 +116,9 @@ Sales categories are Dressed Chicken and Live Weight. Please note that by-produc
             + "="
             + "Ice"
             + "="
-            + str(entry[0])
+            + str(description)
             + "="
-            + str(entry[1]),
+            + str(amount),
         )
     )
     buttons[1].append(
@@ -123,9 +130,9 @@ Sales categories are Dressed Chicken and Live Weight. Please note that by-produc
             + "="
             + "Labor"
             + "="
-            + str(entry[0])
+            + str(description)
             + "="
-            + str(entry[1]),
+            + str(amount),
         )
     )
     buttons[1].append(
@@ -137,9 +144,9 @@ Sales categories are Dressed Chicken and Live Weight. Please note that by-produc
             + "="
             + "Other Expenses"
             + "="
-            + str(entry[0])
+            + str(description)
             + "="
-            + str(entry[1]),
+            + str(amount),
         )
     )
     buttons[2].append(
@@ -151,9 +158,9 @@ Sales categories are Dressed Chicken and Live Weight. Please note that by-produc
             + "="
             + "Dressed Chicken"
             + "="
-            + str(entry[0])
+            + str(description)
             + "="
-            + str(entry[1]),
+            + str(amount),
         )
     )
     buttons[2].append(
@@ -165,27 +172,29 @@ Sales categories are Dressed Chicken and Live Weight. Please note that by-produc
             + "="
             + "Live Weight"
             + "="
-            + str(entry[0])
+            + str(description)
             + "="
-            + str(entry[1]),
+            + str(amount),
         )
     )
-    # buttons[2].append(telegram.InlineKeyboardButton(text='Travel', callback_data=str(update.message.message_id) + '=' + str(update.message.date) + '=' + 'Travel' + '=' + str(entry[0]) + '=' + str(entry[1])))
-    # buttons[2].append(telegram.InlineKeyboardButton(text='Services', callback_data=str(update.message.message_id) + '=' + str(update.message.date) + '=' + 'Services' + '=' + str(entry[0]) + '=' + str(entry[1])))
-    # buttons[2].append(telegram.InlineKeyboardButton(text='Sport', callback_data=str(update.message.message_id) + '=' + str(update.message.date) + '=' + 'Sport' + '=' + str(entry[0]) + '=' + str(entry[1])))
+    # buttons[2].append(telegram.InlineKeyboardButton(text='Travel', callback_data=str(update.message.message_id) + '=' + str(update.message.date) + '=' + 'Travel' + '=' + str(description) + '=' + str(amount)))
+    # buttons[2].append(telegram.InlineKeyboardButton(text='Services', callback_data=str(update.message.message_id) + '=' + str(update.message.date) + '=' + 'Services' + '=' + str(description) + '=' + str(amount)))
+    # buttons[2].append(telegram.InlineKeyboardButton(text='Sport', callback_data=str(update.message.message_id) + '=' + str(update.message.date) + '=' + 'Sport' + '=' + str(description) + '=' + str(amount)))
 
     # With the buttons, we create a keyboard:
     keyboard = telegram.InlineKeyboardMarkup(buttons)
 
     # And we send the reply to the channel:
-    bot.send_message(update.message.chat_id, update.message.text, reply_markup=keyboard)
+    chatbot_client.send_message(
+        update.message.chat_id, update.message.text, reply_markup=keyboard
+    )
 
 
 # input the data to the spreadsheet
 def callback_query_handler(update, context):
     try:
         # Once the user chooses a Type, we can go ahead and delete the message to reduce clutter in the channel:
-        bot.delete_message(
+        chatbot_client.delete_message(
             update.callback_query.message.chat_id,
             str(update.callback_query.message.message_id),
         )
@@ -218,11 +227,11 @@ def callback_query_handler(update, context):
         if input_type == "Dressed Chicken" or input_type == "Live Weight":
             sales_sheet.insert_row(row_to_insert, len(sales_data) + 2)
 
-        bot.send_message(
+        chatbot_client.send_message(
             update.callback_query.message.chat_id,
             "Saved: " + input_type + " - " + description,
         )
-        bot.send_message(
+        chatbot_client.send_message(
             update.callback_query.message.chat_id,
             """To input another entry, just following the same format. To restart, type or click /start. To end the session, type or click /end.""",
         )
@@ -238,11 +247,8 @@ def end_command(update, context):
     )
 
 
-# build the main funtion
-bot = telegram.Bot(token=config.BOT_KEY)
-
-
 def main():
+    logger.info("Process started")
     updater = Updater(config.BOT_KEY, use_context=True)
     dp = updater.dispatcher
 
