@@ -1,0 +1,7 @@
+.git
+
+# python
+.venv/
+
+# application
+gspread-credentials.json
