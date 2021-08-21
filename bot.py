@@ -12,32 +12,24 @@ from telegram.ext import (
     Updater,
 )
 
-# Set your parh
-path = "./Documents/4D&K"
+import config
 
-# BOT API
-BOT_KEY = "1823840395:AAEP5ciz50f3mpN8HZniufVpyi6IZwy1L3M"
 
-# Set scopes when autheticating
-scopes = [
+# gspread configurations
+GSPREAD_SERVICE_ACCOUNT_SCOPES = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.file",
     "https://www.googleapis.com/auth/drive",
 ]
 
-# Authenticate using your credentials
-creds = ServiceAccountCredentials.from_json_keyfile_name(
-    filename="./gspread-credentials.json",
-    scopes=scopes,
-)
 
-# Initialize the client
-client = gspread.authorize(creds)
+def get_service_account_credentials():
+    return ServiceAccountCredentials.from_json_keyfile_name(
+        filename=config.GSPREAD_CREDENTIALS_LOCATION,
+        scopes=GSPREAD_SERVICE_ACCOUNT_SCOPES,
+    )
 
-# Open the sheet by name
-expenses_sheet = client.open("4D&K").worksheet("Expenses")
-sales_sheet = client.open("4D&K").worksheet("Sales")
 
 # start command
 def start_command(update, context):
@@ -194,7 +186,8 @@ def callback_query_handler(update, context):
         )
 
         # keep updated with the gsheet
-        client = gspread.authorize(creds)
+        credentials = get_service_account_credentials()
+        client = gspread.authorize(credentials)
         expenses_sheet = client.open("4D&K").worksheet("Expenses")
         sales_sheet = client.open("4D&K").worksheet("Sales")
         expenses_data = expenses_sheet.get_all_records()
@@ -241,11 +234,11 @@ def end_command(update, context):
 
 
 # build the main funtion
-bot = telegram.Bot(token=BOT_KEY)
+bot = telegram.Bot(token=config.BOT_KEY)
 
 
 def main():
-    updater = Updater(BOT_KEY, use_context=True)
+    updater = Updater(config.BOT_KEY, use_context=True)
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start_command))
